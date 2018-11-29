@@ -23,11 +23,11 @@ class User(object):
         self.user_id = -1
         self.PKC_obj = None                     # chosen from RSA, ECC and BG
         self.SymmEnc_obj = None                 # currently, DES only
-        self.PKG_TYPE_ID_DICT = bidict(Constants.PKG_TYPE_ID_DICT)  # Package id - package funcionality
-        self.PKG_INFO_ITEMS = Constants.PKG_STRUCT_DICT             # structure of each type of package
-        self.ERROR_CODES = bidict(Constants.ERROR_CODE_DICT)        # ErrorCode - description
-        self.ENCRYPT_ID_DICT = bidict(Constants.ENCRYPT_ID_DICT)    # encryption - id
-        self.PKG_INFO_ITEMS = Constants.PKG_INFO_ITEMS              # list of items in the package
+        # self.PKG_TYPE_ID_DICT = Constants.PKG_TYPE_ID_DICT  # Package id - package funcionality
+        # self.PKG_INFO_ITEMS = Constants.PKG_STRUCT_DICT             # structure of each type of package
+        # self.ERROR_CODES = Constants.ERROR_CODE_DICT        # ErrorCode - description
+        # self.ENCRYPT_ID_DICT = Constants.ENCRYPT_ID_DICT    # encryption - id
+        # self.PKG_INFO_ITEMS = Constants.PKG_INFO_ITEMS              # list of items in the package
         self.user_state = -1
         self.User_Info_DB = User_Info_DB()              # an object storing (userid: User_info )
 
@@ -72,7 +72,7 @@ class User(object):
         pkg_info: the dictionary
     """
     def pkg_info_init_gen(self):
-        pkg_info = {key:None for key in self.PKG_INFO_ITEMS}
+        pkg_info = {key:None for key in Constants.PKG_INFO_ITEMS}
 
 
     """
@@ -101,3 +101,52 @@ class User(object):
     def nonce_check(self, nonce, rules):
 
         return True, ErrorCode
+
+    """
+    respond_state_machine()
+    =======================
+    React based on the received pkg and current status.
+
+    inputs:
+        pkg_rev: received package (string)
+
+    output:
+        pkg_send: package to send
+    """
+    def respond_state_machine(self, pkg_rev):
+        pkg_info = self.pkg_interp(pkg_rev)
+        try:
+            if pkg_info["PKG_TYPE_ID"] is None:
+                raise Exception(Constants.ERROR_CODE_DICT["INVALID_PKG"])
+            elif pkg_info["PKG_TYPE_ID"] == Constants.PKG_TYPE_ID_DICT["HELLO_MSG"]:
+                pass
+            elif pkg_info["PKG_TYPE_ID"] == Constants.PKG_TYPE_ID_DICT["ACK_CERT"]:
+                pass
+            elif pkg_info["PKG_TYPE_ID"] == Constants.PKG_TYPE_ID_DICT["DNY_MSG"]:
+                pass
+            elif pkg_info["PKG_TYPE_ID"] == Constants.PKG_TYPE_ID_DICT["CERT_REQ"]:
+                pass
+            elif pkg_info["PKG_TYPE_ID"] == Constants.PKG_TYPE_ID_DICT["CERT_RPY"]:
+                pass
+            elif pkg_info["PKG_TYPE_ID"] == Constants.PKG_TYPE_ID_DICT["CERT_ERR"]:
+                pass
+            elif pkg_info["PKG_TYPE_ID"] == Constants.PKG_TYPE_ID_DICT["KEY_REQ"]:
+                pass
+            elif pkg_info["PKG_TYPE_ID"] == Constants.PKG_TYPE_ID_DICT["KEY_RPY"]:
+                pass
+            elif pkg_info["PKG_TYPE_ID"] == Constants.PKG_TYPE_ID_DICT["KEY_ERR"]:
+                pass
+            elif pkg_info["PKG_TYPE_ID"] == Constants.PKG_TYPE_ID_DICT["COM_MSG"]:
+                pass
+            elif pkg_info["PKG_TYPE_ID"] == Constants.PKG_TYPE_ID_DICT["COM_ERR"]:
+                pass
+            elif pkg_info["PKG_TYPE_ID"] == Constants.PKG_TYPE_ID_DICT["DISCON_REQ"]:
+                pass
+            elif pkg_info["PKG_TYPE_ID"] == Constants.PKG_TYPE_ID_DICT["DISCON_CLG"]:
+                pass
+            elif pkg_info["PKG_TYPE_ID"] == Constants.PKG_TYPE_ID_DICT["DISCON_RPY"]:
+                pass
+            elif pkg_info["PKG_TYPE_ID"] == Constants.PKG_TYPE_ID_DICT["DISCON_ERR"]:
+                pass
+        except Exception as e:
+            raise
