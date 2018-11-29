@@ -2,7 +2,7 @@
 #!/usr/bin/env python3
 
 import numpy as np
-from DES_Class import DES
+from PythonClasses.DES_Class import DES
 
 import sys
 if sys.version_info[0] < 3:

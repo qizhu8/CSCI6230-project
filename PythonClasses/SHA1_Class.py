@@ -2,7 +2,7 @@
 
 import sys
 import numpy as np
-import Number_Package as npkg
+import PythonClasses.Number_Package as npkg
 
 np.warnings.filterwarnings('ignore')
 

@@ -8,7 +8,7 @@ from PythonClasses.Blum_Goldwessar_Class import BG
 from PythonClasses.ECC_Class import ECC
 from PythonClasses.RSA_Class import RSA
 
-from PythonClasses.User_Info_DB_Class import UserInfo
+from PythonClasses.User_Info_DB_Class import User_Info_DB
 
 import Constants
 import time
@@ -27,8 +27,9 @@ class User(object):
         self.PKG_INFO_ITEMS = Constants.PKG_STRUCT_DICT             # structure of each type of package
         self.ERROR_CODES = bidict(Constants.ERROR_CODE_DICT)        # ErrorCode - description
         self.ENCRYPT_ID_DICT = bidict(Constants.ENCRYPT_ID_DICT)    # encryption - id
+        self.PKG_INFO_ITEMS = Constants.PKG_INFO_ITEMS              # list of items in the package
         self.user_state = -1
-        self.User_Info_DB = UserInfo()              # an object storing (userid: User_info )
+        self.User_Info_DB = User_Info_DB()              # an object storing (userid: User_info )
 
     """
     pkg_gen()
@@ -71,7 +72,7 @@ class User(object):
         pkg_info: the dictionary
     """
     def pkg_info_init_gen(self):
-        pkg_info = {key:None for key in }
+        pkg_info = {key:None for key in self.PKG_INFO_ITEMS}
 
 
     """

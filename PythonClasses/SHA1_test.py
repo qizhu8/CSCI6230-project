@@ -1,4 +1,4 @@
-from SHA1_Class import SHA1
+from PythonClasses.SHA1_Class import SHA1
 import hashlib
 
 m = "abc"

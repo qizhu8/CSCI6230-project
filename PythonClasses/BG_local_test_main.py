@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import numpy as np
-import Number_Package as npkg
-from Blum_Goldwessar_Class import BG
+import PythonClasses.Number_Package as npkg
+from PythonClasses.Blum_Goldwessar_Class import BG
 
 p = 499
 q = 547

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from RSA_Class import RSA
+from PythonClasses.RSA_Class import RSA
 
 rsa1 = RSA()
 rsa2 = RSA()

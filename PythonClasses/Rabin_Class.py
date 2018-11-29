@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import Number_Package as npkg
+import PythonClasses.Number_Package as npkg
 
 class Rabin(object):
     """docstring for Rabin."""

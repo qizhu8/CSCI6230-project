@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import Number_Package as npkg
+import PythonClasses.Number_Package as npkg
 import numpy as np
 import time
 

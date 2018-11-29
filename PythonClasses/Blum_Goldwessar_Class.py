@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import numpy as np
-import Number_Package as npkg
+import PythonClasses.Number_Package as npkg
+
 class BG(object):
     """docstring for BG."""
     def __init__(self, p=-1, q=-1):

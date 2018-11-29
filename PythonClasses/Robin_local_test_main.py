@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import numpy as np
-from Rabin_Class import Rabin
+from PythonClasses.Rabin_Class import Rabin
 # p = 7
 # q = 11
 # n = p*q
