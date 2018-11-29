@@ -8,21 +8,12 @@ from PythonClasses.Blum_Goldwessar_Class import BG
 from PythonClasses.ECC_Class import ECC
 from PythonClasses.RSA_Class import RSA
 
-from PythonClasses.user_behavior_DB import UserBehavior
+from PythonClasses.User_Info_DB_Class import UserInfo
 
 import Constants
 import time
 
 import numpy as np
-
-class User_info(object):
-    """docstring for User_info."""
-    def __init__(self, user_id=-1, ip="", last_login_time=-1, state=0):
-        super(User_info, self).__init__()
-        self.user_id = user_id
-        self.ip = ip
-        self.last_login_time = last_login_time
-        self.state = state
 
 
 class User(object):
@@ -32,10 +23,12 @@ class User(object):
         self.user_id = -1
         self.PKC_obj = None                     # chosen from RSA, ECC and BG
         self.SymmEnc_obj = None                 # currently, DES only
-        self.PKG_TYPE_ID_DICT = bidict(Constants.PKG_TYPE_ID_DICT)
-        self.PKG_INFO_ITEMS = Constants.
+        self.PKG_TYPE_ID_DICT = bidict(Constants.PKG_TYPE_ID_DICT)  # Package id - package funcionality
+        self.PKG_INFO_ITEMS = Constants.PKG_STRUCT_DICT             # structure of each type of package
+        self.ERROR_CODES = bidict(Constants.ERROR_CODE_DICT)        # ErrorCode - description
+        self.ENCRYPT_ID_DICT = bidict(Constants.ENCRYPT_ID_DICT)    # encryption - id
         self.user_state = -1
-        self.user_behavior_DB = UserBehavior()              # an object storing (userid: User_info )
+        self.User_Info_DB = UserInfo()              # an object storing (userid: User_info )
 
     """
     pkg_gen()
