@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 import numpy as np
+import math
 
 def is_prime(t):
+    if t == 2 or t == 3:
+        return True
     if t < 1 or t % 2 == 0 or t % 3 == 0:  # remove some easy cases
         return False
     # prime_flag = True
@@ -59,16 +62,49 @@ def mult_inv_mod_N(a, N):
         # print('1=', Aa[0], '*', N_org, '+', Aa[1], '*', a_org)
         return Aa[1] % N_org
 
-def find_prime_smaller_than_k(k):
+
+def find_prime_smaller_than_k(k, n_ignore=0):
     if k < 1:
         print('Please input a positive integer greater than 1')
         return None
     if k %2 == 0:
         k -= 1
-    for num in range(k, 0, -2): # get rid of even numbers
-        if is_prime(num):
-            return num
+    counter = 0
+    while k > 0: # get rid of even numbers
+        if is_prime(k):
+            if counter >= n_ignore:
+                return k
+            else:
+                counter += 1
+        k -= 2
     return 1
+
+def find_prime_greater_than_k(k, n_ignore=0):
+    if k < 1:
+        raise ValueError("k should be greater than 2")
+    if k %2 == 0:
+        k -= 1
+    counter = 0
+    while True:
+        if is_prime(k):
+            if counter >= n_ignore:
+                return k
+            else:
+                counter += 1
+        k += 2
+    return 1
+
+def random_prime_below_k(k):
+    N = N / math.log(N) # approximate number of primes below k
+    r = np.random.randint(N)
+
+    return find_prime_smaller_than_k(k, r)
+
+def random_prime_greater_than_k(k):
+    N = N / math.log(N)
+    r = np.random.randint(N)
+
+    return find_prime_greater_than_k(k, r)
 
 def eular_totient_function(k):
     if k < 0:
@@ -223,3 +259,23 @@ def is_blum(n):
             return False
         prev_f = f
     return True
+
+def blum_interger_generator(p_q_min, gap=-1):
+    if p_q_min < 3:
+        raise ValueError("p_q_max should be greater than 3")
+
+    gap = max(0, gap)
+    # p is searched by adding, q is searched by subtracting
+    def prime_with_3_mod_4(p, plus_flag=True):
+        p = p + 3 - (p % 4)
+        while p > 0:
+            if plus_flag:
+                p += 4
+            else:
+                p -= 4
+            if is_prime(p):
+                return p
+    base = np.random.randint(gap//2, gap)
+    p = prime_with_3_mod_4(p_q_min+base, True)
+    q = prime_with_3_mod_4(p_q_min-base, False )
+    return p, q, p*q

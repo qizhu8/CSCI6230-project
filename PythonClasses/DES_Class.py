@@ -345,3 +345,8 @@ class DES(object):
             text_list.append(text_byte)
         text_str = "".join(self.bin_to_byte(text_list))
         return text_str
+
+
+    def random_private_key(self):
+        p = np.random.bytes(3)
+        return p[0], p[1], p[2]

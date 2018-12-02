@@ -506,6 +506,7 @@ class User(object):
                 pass
         except Exception as e:
             # send error package
+            pass
 
     """
     cert_update()
@@ -558,9 +559,21 @@ class User(object):
     ####################################
 
     """
+    generate a HELLO_MSG pkg_info
+    """
+    def HELLO_MSG_gen(self, nego_choices=['RSA', 'DES', 'SHA1']):
+        pkg_info = self.pkg_info_init_gen()
+        pkg_info['PKG_TYPE_ID'] = Constants.PKG_TYPE_ID_DICT["HELLO_MSG"]
+        pkg_info['PKG_DESC'] = "HELLO_MSG"
+        pkg_info['SRC_ID'] = self.user_id
+        pkg_info["PUBLIC_KEY"] = self.public_key_str
+        pkg_info['NEGO_PARAMS'] = '|'.join([str(Constants.ENCRYPT_ID_DICT[ID]) for ID in nego_choices])
+        return pkg_info
+
+    """
     generate an ACK_CERT pkg_info
     """
-    def gen_ACK_CERT(self):
+    def ACK_CERT_gen(self):
         pkg_info = self.pkg_info_init_gen()
         pkg_info['PKG_TYPE_ID'] = Constants.PKG_TYPE_ID_DICT["ACK_CERT"]
         pkg_info['PKG_DESC'] = "ACK_CERT"

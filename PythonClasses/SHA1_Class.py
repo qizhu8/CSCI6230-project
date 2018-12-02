@@ -145,7 +145,8 @@ class SHA1(object):
     def hash(self, M):
         m = ""
         for c in M:
-            m += format(ord(c), '08b')
+            # m += format(ord(c), '08b')
+            m += format(c, '08b')
 
         padded_m = self.padding(m)
 

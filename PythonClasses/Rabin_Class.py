@@ -102,3 +102,9 @@ class Rabin(object):
             candidates[idx] = ((rt - self.b) * two_inv) % self.n
 
         return candidates
+
+    def random_private_key(self):
+        i = np.random.randint(1000)
+        j = np.random.randint(1000)
+        p, q, N = npkg.blum_interger_generator(2**64, i, j)
+        return p, q
