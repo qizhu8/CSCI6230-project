@@ -59,7 +59,7 @@ BAD_BEHAVIOR=bidict({
 PKG_STRUCT_DICT={
 "HELLO_MSG": "{PKG_TYPE_ID}||{NONCE}||{SRC_ID}||{PUBLIC_KEY}||{NEGO_PARAMS}",  # add public key here
 "ACK_CERT": "{PKG_TYPE_ID}||{NONCE}||{HMAC}||{DST_ID}||{PUBLIC_KEY}||{CERT}", # add public key here
-"DNY_MSG": "{PKG_TYPE_ID}||{NONCE}||{HMAC}||{ERR_CODE}",
+"DNY_MSG": "{PKG_TYPE_ID}||{NONCE}||{HMAC}||{DST_ID}||{PUBLIC_KEY}||{ERR_CODE}", # add public key here
 "CERT_REQ": "{PKG_TYPE_ID}||{NONCE}||{HMAC}",  # subject to changes
 "CERT_RPY": "{PKG_TYPE_ID}||{NONCE}||{HMAC}||{CERT}",
 "CERT_ERR": "{PKG_TYPE_ID}||{NONCE}||{HMAC}||{ERR_CODE}",
@@ -96,7 +96,7 @@ SCORE_TO_PUNISH = 10       # when a user reaches 10 points, punish him
 USER_ID_MAX = 10000        # user id is in range 1 to 9999
 PKG_TOL = 30               # time of life for a package
 CERT_TOL = 600             # validation period for certification
-
+CHALLG_NUMS = 2
 DELIMITER="||"
 
 # regularization express quick reference

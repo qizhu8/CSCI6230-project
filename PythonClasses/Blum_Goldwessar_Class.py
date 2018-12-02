@@ -45,8 +45,6 @@ class BG(object):
         else:
             raise Exception("n should be a blum integer")
 
-
-
     def update_n(self):
         if self.p != -1 and self.q != -1:
             self.n = self.p * self.q
@@ -70,17 +68,19 @@ class BG(object):
         if x0 == -1:
             x0_sqrt = np.random.randint(self.n)
             x0 = x0_sqrt*x0_sqrt % self.n
+            print("BG chooses x0:", x0)
         t = np.ceil(len(m)/self.h)
 
         m_group, ciphertext = [], []
         for i in range(0, len(m), self.h):
-            m_group.append(m[i:i+4])
+            m_group.append(m[i:i+self.h])
         if len(m_group[-1]) < self.h:
             m_group[-1] += "0" * (self.h - len(m_group[-1]))
 
         xi = x0
         for i, mi in enumerate(m_group):
-            xi = xi * xi % self.n
+            xi = pow(int(xi), 2, int(self.n))
+            # xi = xi * xi % self.n
             pi = xi & self.h_mask
             ci = int(mi, 2) ^ pi
             ciphertext.append(ci)
@@ -110,7 +110,8 @@ class BG(object):
 
         m_dec = ""
         for i, ci in enumerate(c[:-1]):
-            xi = xi * xi % self.n
+            # xi = xi * xi % self.n
+            xi = pow(int(xi), 2, int(self.n))
             pi = xi & self.h_mask
             mi = ci ^ pi
             mi_bin = bin(mi)[2:]
@@ -118,8 +119,9 @@ class BG(object):
             m_dec += mi_bin
 
         if bin_on:
-            print(m_dec)
-            num_of_zeros = 0
+            print("BG dec rst:", m_dec)
+            if m_dec[-1] != '0':
+                return m_dec
             for i in range(1, len(m_dec)):
                 if m_dec[-i] != '0':
                     break
@@ -133,9 +135,11 @@ class BG(object):
         return [self.n]
 
     def get_public_key_str(self):
+        self.update_n()
         return str(self.n)
+
     def random_private_key(self):
-        p, q, n = npkg.blum_interger_generator(2**15, 2**8)
+        p, q, n = npkg.blum_interger_generator(2**21, 2**19)
         # r = np.random.randint(n)
         # x0 = r * r % n
         self.set_p(p)
