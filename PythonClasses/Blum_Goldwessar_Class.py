@@ -45,8 +45,7 @@ class BG(object):
         else:
             raise Exception("n should be a blum integer")
 
-    def get_public_key(self):
-        return [self.n]
+
 
     def update_n(self):
         if self.p != -1 and self.q != -1:
@@ -62,6 +61,9 @@ class BG(object):
             raise Exception("please use set_n() to initialize n with a blum integer")
 
     def encrypt(self, m, x0=-1):
+        if isinstance(m, int):
+            m = bin(m)
+
         if self.n == -1:
             raise Exception("Please use set_n() to set n first")
 
@@ -83,9 +85,13 @@ class BG(object):
             ci = int(mi, 2) ^ pi
             ciphertext.append(ci)
         ciphertext.append(xi)
+        ciphertext = '|'.join([str(num) for num in ciphertext])
         return ciphertext
 
-    def decrypt(self, c):
+    def decrypt(self, c, bin_on=True):
+        if isinstance(c, str):
+            c = [int(item) for item in c.split('|')]
+
         if self.p == -1 or self.q == -1:
             raise Exception("Please use set_p() or set_q() to initialize p and q")
 
@@ -99,8 +105,8 @@ class BG(object):
         p_inv = npkg.mult_inv_mod_N(self.p, self.q)
         q_inv = npkg.mult_inv_mod_N(self.q, self.p)
 
-        xi = (self.p * p_inv * rq + self.q * q_inv * rp) % self.n
-
+        xi = (((self.p * p_inv)% self.n) * rq) % self.n + (((self.q * q_inv) %self.n) * rp) % self.n
+        xi %= self.n
 
         m_dec = ""
         for i, ci in enumerate(c[:-1]):
@@ -111,10 +117,25 @@ class BG(object):
             mi_bin = "0"*(self.h - len(mi_bin)) + mi_bin
             m_dec += mi_bin
 
-        return m_dec
+        if bin_on:
+            print(m_dec)
+            num_of_zeros = 0
+            for i in range(1, len(m_dec)):
+                if m_dec[-i] != '0':
+                    break
+            i -= 1
+            return m_dec[:-i]
+        else:
+            return int(m_dec, 2)
 
+
+    def get_public_key(self):
+        return [self.n]
+
+    def get_public_key_str(self):
+        return str(self.n)
     def random_private_key(self):
-        p, q, n = npkg.blum_interger_generator(2**32, 2**10)
+        p, q, n = npkg.blum_interger_generator(2**15, 2**8)
         # r = np.random.randint(n)
         # x0 = r * r % n
         self.set_p(p)

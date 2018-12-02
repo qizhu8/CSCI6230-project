@@ -29,7 +29,8 @@ if sys.version_info[0] < 3:
 #
 # # test input
 plaintext = np.array([1, 1, 0, 1, 0, 0, 1, 0], dtype=bool)
-init_key_10bits = np.array([0, 1, 1, 0, 1, 0, 1, 0, 1, 1], dtype=bool)
+# init_key_10bits = np.array([0, 1, 1, 0, 1, 0, 1, 0, 1, 1], dtype=bool)
+init_key_10bits = np.random.randint(0, 2, 10, dtype=bool)
 # rounds=2
 
 des = DES()

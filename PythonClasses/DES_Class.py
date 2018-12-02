@@ -24,6 +24,7 @@ class DES(object):
         self.tab_key_init_P = None  # initial permutation table to generate keys
         self.tab_key_sub_P = None   # permutation table for sub sequences to generate keys
         self.keys = None            # set of keys
+        self.init_key = None
         if not DES_setting:
             self.set_to_default_DES()
         else:
@@ -298,8 +299,10 @@ class DES(object):
         output = np.array([input[:input_len//2], input[input_len//2:]])
         return output
 
-    def encrypt_one_byte(self, plaintext, init_key, keys=None):
+    def encrypt_one_byte(self, plaintext, init_key=None, keys=None):
         # main block to encrypt plain text
+        if init_key is None:
+            init_key = self.int_to_key(self.init_key)
         if keys is None:
             keys = self.gen_key_set(init_key)
         plaintext_initP = self.permutation(plaintext, self.tab_text_init_P)
@@ -313,8 +316,10 @@ class DES(object):
         cipher = self.permutation(np.concatenate([L0, R0], axis=0), self.tab_text_inv_P)
         return cipher, keys
 
-    def decrypt_one_byte(self, cipher, init_key, keys=None):
+    def decrypt_one_byte(self, cipher, init_key=None, keys=None):
         # main block to decrypt cipher text
+        if init_key is None:
+            init_key = self.int_to_key(self.init_key)
         if keys is None:
             keys = self.gen_key_set(init_key)
         cipher_initP = self.permutation(cipher, self.tab_text_init_P)
@@ -328,7 +333,9 @@ class DES(object):
         plaintext = self.permutation(np.concatenate([L0, R0], axis=0), self.tab_text_inv_P)
         return plaintext, keys
 
-    def encrypt(self, text_str, init_key):
+    def encrypt(self, text_str, init_key=None):
+        if init_key is None:
+            init_key = self.int_to_key(self.init_key)
         keys = None
         cipher_list = []
         for text_byte in self.byte_to_bin(text_str):
@@ -337,7 +344,9 @@ class DES(object):
         cipher_str = "".join(self.bin_to_byte(cipher_list))
         return cipher_str
 
-    def decrypt(self, cipher_str, init_key):
+    def decrypt(self, cipher_str, init_key=None):
+        if init_key is None:
+            init_key = self.int_to_key(self.init_key)
         keys = None
         text_list = []
         for cipher_byte in self.byte_to_bin(cipher_str):
@@ -346,7 +355,5 @@ class DES(object):
         text_str = "".join(self.bin_to_byte(text_list))
         return text_str
 
-
-    def random_private_key(self):
-        p = np.random.bytes(3)
-        return p[0], p[1], p[2]
+    def random_key(self):
+        self.init_key = np.random.randint(2**len(self.tab_key_init_P))

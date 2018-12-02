@@ -65,7 +65,7 @@ class User(object):
     def pkg_gen(self, pkg_info):
         PKG_TYPE_ID = pkg_info["PKG_TYPE_ID"]
         PKG_DESC = Constants.PKG_TYPE_ID_DICT.inverse[PKG_TYPE_ID][0]
-        print(PKG_DESC)
+        pkg_info["NONCE"] = self.nonce_gen()
         if PKG_TYPE_ID == Constants.PKG_TYPE_ID_DICT["HELLO_MSG"]:
             # pkg_info["PKG_DESC"] = "HELLO_MSG"
             # pkg_info["SRC_ID"] = pkg_msg_list[2]
@@ -107,7 +107,7 @@ class User(object):
             msg = Constants.PKG_STRUCT_DICT[PKG_DESC].format(\
             PKG_TYPE_ID=PKG_TYPE_ID,\
             NONCE=pkg_info["NONCE"],\
-            HMAC=self.HMAC_gen([pkg_info["PKG_TYPE_ID"], pkg_info["CERT_REQ"]], self.public_key_str)\
+            HMAC=self.HMAC_gen([pkg_info["PKG_TYPE_ID"], pkg_info["NONCE"]], self.public_key_str)\
             )
         elif PKG_TYPE_ID == Constants.PKG_TYPE_ID_DICT["CERT_RPY"]:
             # pkg_info["PKG_DESC"] = "CERT_RPY"
@@ -169,6 +169,7 @@ class User(object):
             HMAC=self.HMAC_gen([pkg_info["PKG_TYPE_ID"], pkg_info["NONCE"], pkg_info["PAYLOAD"]], self.public_key_str),\
             PAYLOAD=pkg_info["PAYLOAD"]\
             )
+
         elif PKG_TYPE_ID == Constants.PKG_TYPE_ID_DICT["COM_ERR"]:
             # pkg_info["PKG_DESC"] = "COM_ERR"
             # pkg_info["HMAC"] = pkg_msg_list[2]
@@ -448,8 +449,13 @@ class User(object):
     """
     def nonce_check(self, nonce):
         now = time.time()
-        if now - float(nonce) > Constants.PKG_TOL:
-            return False, Constants.ERROR_CODE_DICT("EXPIRED_PKG")
+        try:
+            nonce_float = float(nonce)
+        except Exception as e:
+            return False, Constants.ERROR_CODE_DICT["INVALID_PKG"]
+
+        if now - nonce_float > Constants.PKG_TOL:
+            return False, Constants.ERROR_CODE_DICT["EXPIRED_PKG"]
         else:
             return True, None
 
@@ -581,4 +587,102 @@ class User(object):
         pkg_info["PUBLIC_KEY"] = self.public_key_str
         self.cert_update()
         pkg_info["CERT"] = self.cert
+        return pkg_info
+
+    def DNY_MSG_gen(self, ERR_CODE=1):
+        pkg_info = self.pkg_info_init_gen()
+        pkg_info['PKG_TYPE_ID'] = Constants.PKG_TYPE_ID_DICT["DNY_MSG"]
+        pkg_info['PKG_DESC'] = "DNY_MSG"
+        pkg_info['ERR_CODE'] = str(ERR_CODE)
+        return pkg_info
+
+    def CERT_REQ_gen(self): # not used, no worry
+        pkg_info = self.pkg_info_init_gen()
+        pkg_info['PKG_TYPE_ID'] = Constants.PKG_TYPE_ID_DICT["CERT_REQ"]
+        pkg_info['PKG_DESC'] = "CERT_REQ"
+        return pkg_info
+
+    def CERT_RPY_gen(self):
+        pkg_info = self.pkg_info_init_gen()
+        pkg_info['PKG_TYPE_ID'] = Constants.PKG_TYPE_ID_DICT["CERT_RPY"]
+        pkg_info['PKG_DESC'] = "CERT_RPY"
+        self.cert_update()
+        pkg_info['CERT'] = self.cert
+        return pkg_info
+
+    def CERT_ERR_gen(self, ERR_CODE=3):
+        pkg_info = self.pkg_info_init_gen()
+        pkg_info['PKG_TYPE_ID'] = Constants.PKG_TYPE_ID_DICT["CERT_ERR"]
+        pkg_info['PKG_DESC'] = "CERT_ERR"
+        pkg_info['ERR_CODE'] = ERR_CODE
+        return pkg_info
+
+    def KEY_REQ_gen(self): # send public key
+        pkg_info = self.pkg_info_init_gen()
+        pkg_info['PKG_TYPE_ID'] = Constants.PKG_TYPE_ID_DICT["KEY_REQ"]
+        pkg_info['PKG_DESC'] = "KEY_REQ"
+        pkg_info['KEY_INFO'] = self.PKC_obj.get_public_key_str()
+        return pkg_info
+
+    def KEY_RPY_gen(self):
+        pkg_info = self.pkg_info_init_gen()
+        pkg_info['PKG_TYPE_ID'] = Constants.PKG_TYPE_ID_DICT["KEY_RPY"]
+        pkg_info['PKG_DESC'] = "KEY_RPY"
+
+        key = self.SymmEnc_obj.init_key
+        key_with_padding = (key<<19) + (np.random.randint(2**18)<<1) + 1
+        # print("real number", bin(key_with_padding))
+        print("true:", np.binary_repr(key_with_padding, 29))
+        pkg_info['KEY_INFO'] = self.PKC_obj.encrypt(key_with_padding)
+        return pkg_info
+
+    def KEY_ERR_gen(self, ERR_CODE=1):
+        pkg_info = self.pkg_info_init_gen()
+        pkg_info['PKG_TYPE_ID'] = Constants.PKG_TYPE_ID_DICT["KEY_ERR"]
+        pkg_info['PKG_DESC'] = "KEY_ERR"
+        pkg_info['ERR_CODE'] = ERR_CODE
+        return pkg_info
+
+    def COM_MSG_gen(self, message):
+        pkg_info = self.pkg_info_init_gen()
+        pkg_info['PKG_TYPE_ID'] = Constants.PKG_TYPE_ID_DICT["COM_MSG"]
+        pkg_info['PKG_DESC'] = "COM_MSG"
+        pkg_info['PAYLOAD'] = self.SymmEnc_obj.encrypt(message.encode())
+        return pkg_info
+
+    def COM_ERR_gen(self, ERR_CODE=1):
+        pkg_info = self.pkg_info_init_gen()
+        pkg_info['PKG_TYPE_ID'] = Constants.PKG_TYPE_ID_DICT["COM_ERR"]
+        pkg_info['PKG_DESC'] = "COM_ERR"
+        pkg_info['ERR_CODE'] = ERR_CODE
+        return pkg_info
+
+    def DISCON_REQ_gen(self):
+        pkg_info = self.pkg_info_init_gen()
+        pkg_info['PKG_TYPE_ID'] = Constants.PKG_TYPE_ID_DICT["DISCON_REQ"]
+        pkg_info['PKG_DESC'] = "DISCON_REQ"
+        return pkg_info
+
+    def DISCON_CLG_gen(self, CHALLG):
+        pkg_info = self.pkg_info_init_gen()
+        pkg_info['PKG_TYPE_ID'] = Constants.PKG_TYPE_ID_DICT["DISCON_CLG"]
+        pkg_info['PKG_DESC'] = "DISCON_CLG"
+        pkg_info['CHALLG'] = CHALLG
+
+        return pkg_info
+
+    def DISCON_RPY_gen(self, CHALLG_RPY):
+        pkg_info = self.pkg_info_init_gen()
+        pkg_info['PKG_TYPE_ID'] = Constants.PKG_TYPE_ID_DICT["DISCON_RPY"]
+        pkg_info['PKG_DESC'] = "DISCON_RPY"
+        pkg_info['CHALLG_RPY'] = CHALLG_RPY
+
+        return pkg_info
+
+    def DISCON_ERR_gen(self, ERR_CODE=1):
+        pkg_info = self.pkg_info_init_gen()
+        pkg_info['PKG_TYPE_ID'] = Constants.PKG_TYPE_ID_DICT["DISCON_ERR"]
+        pkg_info['PKG_DESC'] = "DISCON_ERR"
+        pkg_info['ERR_CODE'] = ERR_CODE
+
         return pkg_info

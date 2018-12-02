@@ -48,8 +48,15 @@ class RSA(object):
         else:
             print("q should be prime")
 
+    def set_e_N(self, e, N):
+        self.e = e
+        self.N = N
+
     def get_public_key(self):
         return [self.N, self.e]
+
+    def get_public_key_str(self):
+        return str(self.N) + '|' + str(self.e)
 
     def encrypt(self, m):
         if m > self.N:
@@ -57,8 +64,13 @@ class RSA(object):
             m %= self.N
         return npkg.exp_mod(m, self.e, self.N)
 
-    def decrypt(self, c):
-        return npkg.exp_mod(c, self.d, self.N)
+    def decrypt(self, c, bin_on=False):
+        if isinstance(c, str):
+            c = int(c)
+        p = npkg.exp_mod(c, self.d, self.N)
+        if bin_on:
+            p = bin(p)[2:]
+        return p
 
     def sign(self, m): # sign the message
         if m > self.N:
@@ -76,7 +88,7 @@ class RSA(object):
             return False
 
     def random_private_key(self):
-        base = np.random.randint(2**10)
+        base = np.random.randint(2**29)
         self.p = npkg.find_prime_smaller_than_k(2**31 - base)
         self.q = npkg.find_prime_greater_than_k(2**31 + base)
 
