@@ -36,7 +36,7 @@ try:
     for rounds in range(3):
         bob_resp = sock_self.recv(1024).decode()
         need_response, alice_resp, terminal_signal = Alice.respond_state_machine(bob_resp, bob_host)
-        if need_response or terminal_signal:
+        if alice_resp is not None and (need_response or not terminal_signal):
             sock_self.send(alice_resp.encode())
         else:
             break;
@@ -46,26 +46,30 @@ except socket.error as msg:
     else:
         print(msg);
     sys.exit(1)
-
-print(Alice.cur_comm_state)
-for message in messages_to_send:
-    Alice_message = Alice.send_message(message)
-    sock_self.send(Alice_message.encode())
-    bob_resp = sock_self.recv(1024).decode()
-    need_response, alice_resp, terminal_signal = Alice.respond_state_machine(bob_resp, bob_host)
-    if terminal_signal:
-        break
+except BrokenPipeError as e:
+    print("Bob left unexpectedly")
 
 try:
+    for message in messages_to_send:
+        Alice_message = Alice.send_message(message)
+        sock_self.send(Alice_message.encode())
+        bob_resp = sock_self.recv(1024).decode()
+        need_response, alice_resp, terminal_signal = Alice.respond_state_machine(bob_resp, bob_host)
+        if terminal_signal:
+            break
+
+
     Alice_msg = Alice.disconnect()
     sock_self.send(Alice_msg.encode())
     for rounds in range(3):
         bob_resp = sock_self.recv(1024).decode()
         need_response, Alice_msg, terminal_signal = Alice.respond_state_machine(bob_resp, bob_host)
-        if need_response or not terminal_signal:
+        if Alice_msg is not None and (need_response or not terminal_signal):
             sock_self.send(Alice_msg.encode())
         else:
             break;
     sock_self.close()
 except BrokenPipeError as e:
-    print("Bob left")
+    print("Bob left unexpectedly")
+
+print("Bob left expected")

@@ -59,7 +59,7 @@ class User_Info_DB(object):
         self.ip_2_user_id = {}
 
     def add_user(self, user_id, ip):
-
+        print("add user")
         if ip in self.ip_2_user_id:
             if self.check_ip(ip): # good ip, can overwrite the user
                 old_user_id = self.ip_2_user_id[ip]
@@ -82,6 +82,7 @@ class User_Info_DB(object):
             print("Cannot add user because User Exists")
 
     def add_record(self, user_id=-1, ip="", behavior=""):
+        print("add record", user_id, ip, behavior)
         if user_id in self.user_behave_db: # add record by user_id
             cur_state = self.user_behave_db[user_id].add_record(behavior)
         elif ip in self.ip_2_user_id: # add record by ip
@@ -89,6 +90,7 @@ class User_Info_DB(object):
              cur_state = self.user_behave_db[user_id].add_record(behavior)
         else:
             try:
+                user_id = 1 # unknown user
                 self.user_behave_db[user_id] = User_info(user_id=user_id, ip=ip)
                 self.ip_2_user_id[ip] = user_id
                 cur_state = self.user_behave_db[user_id].add_record(behavior)

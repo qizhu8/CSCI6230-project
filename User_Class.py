@@ -27,7 +27,7 @@ class User(object):
         if user_id > 1 and user_id < Constants.USER_ID_MAX:
             self.user_id = user_id
         else:
-            self.user_id = np.random.randint(1, Constants.USER_ID_MAX)
+            self.user_id = np.random.randint(2, Constants.USER_ID_MAX)
             print("user_id is set to be ", self.user_id)
         self.PKC_obj = None                     # chosen from RSA, ECC and BG
         self.SymmEnc_obj = None                 # currently, DES only
@@ -48,6 +48,9 @@ class User(object):
 
         self.cur_dst_user_info = {'user_id':-1, 'public_key_str':None, 'public_key':None, 'PKC_obj':None, 'CHALLG':None}
         self.cur_comm_state = -1
+
+        # if not specified, this is the auto-reply message set
+        self.message_set = ["Sorry, I cannot hear you.", "I'm going to take a shower. See you tomorrow!", "Autoreply, I'm taking a shower"]
 
     """
     pkg_gen()
@@ -479,72 +482,105 @@ class User(object):
         pkg_send: package to send
     """
     def respond_state_machine(self, pkg_rev, ip):
+        # ignore too long or too sort messages
+        if len(pkg_rev) > Constants.MSG_MAX_LENGTH or len(pkg_rev) < 10:
+            return False, None, False
         try:
-            if not self.User_Info_DB.check_ip(ip): # user in jail
+            print("==========================")
+            if not self.User_Info_DB.check_ip(ip): # user in jail, disconnect immediately
+                print("user in jail")
                 return False, None, True
             pkg_info = self.pkg_interp(pkg_rev) # has some simply sanitary checks
+            print("--------------------------")
+
             # raise ValueError(Constants.ERROR_CODE_DICT["INVALID_PKG"])
             print("receive:", pkg_info["PKG_DESC"])
+
+            # receive error message
+            if pkg_info['PKG_TYPE_ID'] in [Constants.PKG_TYPE_ID_DICT['DNY_MSG'], Constants.PKG_TYPE_ID_DICT['CERT_ERR'], Constants.PKG_TYPE_ID_DICT['KEY_ERR'], Constants.PKG_TYPE_ID_DICT['COM_ERR']]:
+                print("Encounter Error")
+                if pkg_info['ERR_CODE'] is not None and pkg_info['ERR_CODE'] in Constants.ERROR_CODE_DICT.inverse:
+                    print("ERROR CODE:", Constants.ERROR_CODE_DICT.inverse[pkg_info['ERR_CODE']])
+                return False, None, True
+
+
             if self.cur_comm_state == -1: # initial state  expect hello msg
                 if pkg_info['PKG_TYPE_ID'] == Constants.PKG_TYPE_ID_DICT['HELLO_MSG']:
                     self.HELLO_MSG_react(pkg_info)
                     resp_pkg_info = self.ACK_CERT_gen()
                     self.cur_comm_state = 1 # expect CERT_RPY
                     self.message_id = 0
+                else:
+                    raise ValueError(Constants.ERROR_CODE_DICT["INVALID_PKG"])
 
-            if self.cur_comm_state == 0: # user who just sent HELLO_MSG,
+            elif self.cur_comm_state == 0: # user just sent HELLO_MSG,
                 if pkg_info['PKG_TYPE_ID'] == Constants.PKG_TYPE_ID_DICT['ACK_CERT']:
                     self.ACK_CERT_react(pkg_info)
                     resp_pkg_info = self.CERT_RPY_gen()
                     self.cur_comm_state = 2 # expect key exchange
                     self.message_id = 0
+                else:
+                    raise ValueError(Constants.ERROR_CODE_DICT["INVALID_PKG"])
 
-            if self.cur_comm_state == 1: # expect certification CERT_RPY
+
+            elif self.cur_comm_state == 1: # expect certification CERT_RPY
                 if pkg_info['PKG_TYPE_ID'] == Constants.PKG_TYPE_ID_DICT['CERT_RPY']:
                     self.CERT_RPY_react(pkg_info)
                     resp_pkg_info = self.KEY_REQ_gen()
                     self.cur_comm_state = 3 # expect key rpy
+                else: # potential DOS ATTACK
+                    raise ValueError(Constants.ERROR_CODE_DICT["DoS_ATK"])
 
-
-            if self.cur_comm_state == 2: # receive key req:
+            elif self.cur_comm_state == 2: # receive key req:
                 if pkg_info['PKG_TYPE_ID'] == Constants.PKG_TYPE_ID_DICT['KEY_REQ']:
                     self.KEY_REQ_react(pkg_info)
                     resp_pkg_info = self.KEY_RPY_gen()
                     self.cur_comm_state = 4 # expect comm message
+                else:
+                    raise ValueError(Constants.ERROR_CODE_DICT["INVALID_PKG"])
 
-            if self.cur_comm_state == 3: # receive key rpy
+
+            elif self.cur_comm_state == 3: # receive key rpy
                 if pkg_info['PKG_TYPE_ID'] == Constants.PKG_TYPE_ID_DICT['KEY_RPY']:
                     self.KEY_RPY_react(pkg_info)
                     resp_pkg_info = self.COM_MSG_gen(message="Good to go")
                     self.cur_comm_state = 5 # talking......
+                else:
+                    raise ValueError(Constants.ERROR_CODE_DICT["WRONG_KEY_INFO"])
 
-            if self.cur_comm_state == 4: # start taking
+            elif self.cur_comm_state == 4: # start taking
                 if pkg_info['PKG_TYPE_ID'] == Constants.PKG_TYPE_ID_DICT['COM_MSG']:
                     self.COM_MSG_react(pkg_info)
-                    # print("Successfully connect to the remote!")
+                    # print("=====Successfully connects to the remote=====")
                     # resp_pkg_info = self.COM_MSG_gen(message="I'm Ready")
                     self.cur_comm_state = 5 # expect session key
                     return False, None, False
+                else:
+                    raise ValueError(Constants.ERROR_CODE_DICT["INVALID_PKG"])
 
-            if self.cur_comm_state == 5: # send random messages
+            elif self.cur_comm_state == 5: # send random messages
                 if pkg_info['PKG_TYPE_ID'] == Constants.PKG_TYPE_ID_DICT['COM_MSG']:
                     self.COM_MSG_react(pkg_info)
 
-                    message_set = ["Sorry, I cannot hear you.", "I'm going to take a shower. See you tomorrow!", "Autoreply, I'm taking a shower"]
+                    resp_pkg_info = self.COM_MSG_gen(message=self.message_set[self.message_id % len(self.message_set)])
+                    self.message_id = min(self.message_id+1, len(self.message_set)-1)
 
-                    resp_pkg_info = self.COM_MSG_gen(message=message_set[self.message_id % len(message_set)])
-                    self.message_id = min(self.message_id+1, len(message_set)-1)
-
-                if pkg_info['PKG_TYPE_ID'] == Constants.PKG_TYPE_ID_DICT['DISCON_REQ']:
+                elif pkg_info['PKG_TYPE_ID'] == Constants.PKG_TYPE_ID_DICT['DISCON_REQ']:
                     resp_pkg_info = self.DISCON_CLG_gen()
                     self.cur_comm_state = 8 # expect challenge reply
+                else:
+                    raise ValueError(Constants.ERROR_CODE_DICT["INVALID_PKG"])
 
-            if self.cur_comm_state == 7: # sent DISCON_REQ
+            elif self.cur_comm_state == 7: # sent DISCON_REQ
                 if pkg_info['PKG_TYPE_ID'] == Constants.PKG_TYPE_ID_DICT['DISCON_CLG']:
+                    # after replying, do nothing
                     resp_pkg_info = self.DISCON_RPY_gen(pkg_info["CHALLG"])
                     self.cur_comm_state = 9 # expect challenge reply
+                else:
+                    raise ValueError(Constants.ERROR_CODE_DICT["INVALID_PKG"])
 
-            if self.cur_comm_state == 8: # sent DISCON_CLG
+
+            elif self.cur_comm_state == 8: # sent DISCON_CLG
                 if pkg_info['PKG_TYPE_ID'] == Constants.PKG_TYPE_ID_DICT['DISCON_RPY']:
                     if self.CHALLG_check(pkg_info['CHALLG_RPY']):
                         print("disconnect accept")
@@ -557,12 +593,30 @@ class User(object):
                         return False, None, True
                     else:
                         self.cur_comm_state = 5
-
+                else:
+                    raise ValueError(Constants.ERROR_CODE_DICT["INVALID_PKG"])
+            elif self.cur_comm_state == 9: # do nothing, no reply, just nothing
+                return False, None, False
 
         except Exception as e:
             # send error package
-            if int(str(e)) in [Constants.ERROR_CODE_DICT["INVALID_PKG"], Constants.ERROR_CODE_DICT["WRONG_NEGO_PARAMS"]]:
+
+            if int(str(e)) in [Constants.ERROR_CODE_DICT["EXPIRED_CERT"], Constants.ERROR_CODE_DICT["INVALID_CERT"]]:
+                resp_pkg_info = self.CERT_ERR_gen()
+                self.User_Info_DB.add_record(ip=ip, behavior="INVALID_CERT")
+            elif int(str(e)) == Constants.ERROR_CODE_DICT["DoS_ATK"]:
                 resp_pkg_info = self.DNY_MSG_gen(str(e))
+                self.User_Info_DB.add_record(ip=ip, behavior="DoS_ATK")
+            else:
+                resp_pkg_info = self.DNY_MSG_gen(str(e))
+                self.User_Info_DB.add_record(ip=ip, behavior="INVALID_PKG")
+            # encounter any of them, start from scratch
+            self.cur_comm_state = -1
+            self.sign_obj = RSA()
+            self.public_key = self.sign_obj.get_public_key()              # public key for check
+            self.public_key_str = self.sign_obj.get_public_key_str()   # will be appended with PKC_obj.public_key_str
+
+            self.cert = None
 
 
         return True, self.pkg_gen(resp_pkg_info), False

@@ -14,7 +14,7 @@ import sys
 import time
 
 
-bob_host, bob_port = 'localhost', 9200
+bob_host, bob_port = '127.0.0.1', 9200
 
 def reply_conn(conn, addr):
     print('Accept new connection from user {0}'.format(addr));
@@ -46,8 +46,8 @@ while 1:
         try:
             if buf:
                 receive_packet = bytes.decode(buf).rstrip('\x00')
-                need_rpy, reply_packet, terminal_signal = Bob.respond_state_machine(receive_packet, addr)
-                if need_rpy:
+                need_rpy, reply_packet, terminal_signal = Bob.respond_state_machine(receive_packet, addr[0])
+                if need_rpy and reply_packet is not None:
                     conn.send(reply_packet.encode())
                 if terminal_signal:
                     conn.close()
