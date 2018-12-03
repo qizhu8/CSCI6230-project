@@ -68,7 +68,7 @@ class BG(object):
         if x0 == -1:
             x0_sqrt = np.random.randint(self.n)
             x0 = x0_sqrt*x0_sqrt % self.n
-            print("BG chooses x0:", x0)
+            # print("BG chooses x0:", x0)
         t = np.ceil(len(m)/self.h)
 
         m_group, ciphertext = [], []
@@ -119,7 +119,7 @@ class BG(object):
             m_dec += mi_bin
 
         if bin_on:
-            print("BG dec rst:", m_dec)
+            # print("BG dec rst:", m_dec)
             if m_dec[-1] != '0':
                 return m_dec
             for i in range(1, len(m_dec)):

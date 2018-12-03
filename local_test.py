@@ -16,7 +16,7 @@ alice_ip = '192.168.31.1'
 bob_ip = '192.168.31.2'
 
 print("="*50)
-alice_HELLO_MSG_pkg_info = alice.HELLO_MSG_gen(nego_choices=['BG', 'DES', 'SHA1'])
+alice_HELLO_MSG_pkg_info = alice.HELLO_MSG_gen(nego_choices=['RSA', 'DES', 'SHA1'])
 pkg_msg = alice.pkg_gen(alice_HELLO_MSG_pkg_info)
 print_pkg_info(alice_HELLO_MSG_pkg_info)
 

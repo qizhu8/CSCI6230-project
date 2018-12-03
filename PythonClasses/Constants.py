@@ -21,7 +21,7 @@ PKG_TYPE_ID_DICT=bidict({
 
 ENCRYPT_ID_DICT=bidict({
 "RSA": 0x01,
-# "ECC": 0x02, # map message to a point on ECC has not be resolved yet
+# "ECC": 0x02, # map message to a point on ECC has not been resolved yet
 "BG": 0x03,
 "DES": 0x11,
 "SHA1":0x21

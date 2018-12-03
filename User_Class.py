@@ -480,11 +480,11 @@ class User(object):
     """
     def respond_state_machine(self, pkg_rev, ip):
         try:
-            if not self.User_Info_DB.check_ip(ip):
-                return False, None
+            if not self.User_Info_DB.check_ip(ip): # user in jail
+                return False, None, True
             pkg_info = self.pkg_interp(pkg_rev) # has some simply sanitary checks
             # raise ValueError(Constants.ERROR_CODE_DICT["INVALID_PKG"])
-
+            print("receive:", pkg_info["PKG_DESC"])
             if self.cur_comm_state == -1: # initial state  expect hello msg
                 if pkg_info['PKG_TYPE_ID'] == Constants.PKG_TYPE_ID_DICT['HELLO_MSG']:
                     self.HELLO_MSG_react(pkg_info)
@@ -524,7 +524,7 @@ class User(object):
                     # print("Successfully connect to the remote!")
                     # resp_pkg_info = self.COM_MSG_gen(message="I'm Ready")
                     self.cur_comm_state = 5 # expect session key
-                    return False, None
+                    return False, None, False
 
             if self.cur_comm_state == 5: # send random messages
                 if pkg_info['PKG_TYPE_ID'] == Constants.PKG_TYPE_ID_DICT['COM_MSG']:
@@ -554,7 +554,7 @@ class User(object):
                         self.public_key_str = self.sign_obj.get_public_key_str()   # will be appended with PKC_obj.public_key_str
 
                         self.cert = None
-                        return False, None
+                        return False, None, True
                     else:
                         self.cur_comm_state = 5
 
@@ -565,7 +565,7 @@ class User(object):
                 resp_pkg_info = self.DNY_MSG_gen(str(e))
 
 
-        return True, self.pkg_gen(resp_pkg_info)
+        return True, self.pkg_gen(resp_pkg_info), False
 
     """
     cert_update()
@@ -593,7 +593,8 @@ class User(object):
             return
 
     def cert_check(self, cert, SRC_ID, N, e):
-        print("check:", cert, SRC_ID, N, e)
+        # print("check:", cert, SRC_ID, N, e)
+        print("checking cert")
         cert_check_obj = RSA(e=e, N=N)
         cert_parts = cert.split('|')
         if len(cert_parts) == 3:
@@ -826,17 +827,17 @@ class User(object):
         key = self.SymmEnc_obj.init_key
         key_with_padding = (key<<19) + (np.random.randint(2**18)<<1) + 1
         # print("real number", bin(key_with_padding))
-        print("true:", np.binary_repr(key_with_padding, 29))
+        # print("true:", np.binary_repr(key_with_padding, 29))
         pkg_info['KEY_INFO'] = self.cur_dst_user_info['PKC_obj'].encrypt(key_with_padding)
-        print("PKC public key", self.cur_dst_user_info['PKC_obj'].get_public_key_str())
+        # print("PKC public key", self.cur_dst_user_info['PKC_obj'].get_public_key_str())
         return pkg_info
 
     def KEY_RPY_react(self, pkg_info):
         try:
             key_with_padding = self.PKC_obj.decrypt(pkg_info['KEY_INFO'], bin_on=True)
-            print("Decrypt p, q", self.PKC_obj.p, self.PKC_obj.q, self.PKC_obj.n)
-            print(key_with_padding, "@@@@", len(key_with_padding))
-            print("str 2 change:", key_with_padding[:-19])
+            # print("Decrypt p, q", self.PKC_obj.p, self.PKC_obj.q, self.PKC_obj.n)
+            # print(key_with_padding, "@@@@", len(key_with_padding))
+            # print("str 2 change:", key_with_padding[:-19])
             self.SymmEnc_obj.init_key=int(key_with_padding[:-19], 2)
         except:
             raise ValueError(Constants.ERROR_CODE_DICT['INVALID_PKG']) # create key error if possible
@@ -908,6 +909,7 @@ class User(object):
         return pkg_info
 
     def send_message(self, message):
+        print("send:", message)
         pkg_info = self.COM_MSG_gen(message=message)
         self.cur_comm_state = 4
         return self.pkg_gen(pkg_info)
