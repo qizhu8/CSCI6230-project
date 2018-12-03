@@ -72,4 +72,4 @@ try:
 except BrokenPipeError as e:
     print("Bob left unexpectedly")
 
-print("Bob left expected")
+print("Bob left as expected")
