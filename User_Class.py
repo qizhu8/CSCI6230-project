@@ -501,6 +501,13 @@ class User(object):
                 print("Encounter Error")
                 if pkg_info['ERR_CODE'] is not None and pkg_info['ERR_CODE'] in Constants.ERROR_CODE_DICT.inverse:
                     print("ERROR CODE:", Constants.ERROR_CODE_DICT.inverse[pkg_info['ERR_CODE']])
+                self.cur_comm_state = -1
+                self.sign_obj = RSA()
+                self.public_key = self.sign_obj.get_public_key()              # public key for check
+                self.public_key_str = self.sign_obj.get_public_key_str()   # will be appended with PKC_obj.public_key_str
+
+                self.cert = None
+
                 return False, None, True
 
 
@@ -617,6 +624,8 @@ class User(object):
             self.public_key_str = self.sign_obj.get_public_key_str()   # will be appended with PKC_obj.public_key_str
 
             self.cert = None
+            return True, self.pkg_gen(resp_pkg_info), True
+
 
 
         return True, self.pkg_gen(resp_pkg_info), False
