@@ -95,5 +95,6 @@ Bob is not online, maybe tomorrow.
 - ```Alice.py``` and ```Bob.py``` are the remote test programs. Play with them.
 
 ## Last but not Least
-We design a Challenge strategy to prevent De-auth Attack. The strategy is described in the *whiteHatReport.pdf* section
+- We design a Challenge strategy to prevent De-auth Attack. The strategy is described in the *whiteHatReport.pdf* section
 *2.4.1 Challeng Strategy*.
+- For the state machine used for auto-response (not necessarily the auto-reply, just send a reply package), because the strategy is pretty complicated, you are welcomed to read the code of function  ```respond_state_machine(self, pkg_rev, ip)``` in ```User_Class.py```. It is explained with comments.
